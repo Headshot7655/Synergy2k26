@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Synergy2K Next-Gen (NBA 2K26 Edition)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+<div class="app-shell">
+
+    <!-- SIDEBAR (Synergy2K Plus style) -->
+    <aside class="sidebar">
+        <div class="sidebar-logo">
+            <h1>Synergy2K</h1>
+            <span class="tagline">Next-Gen • 2K26</span>
+        </div>
+
+        <nav class="sidebar-nav">
+            <button class="nav-item active" data-target="dashboard-panel">Dashboard</button>
+            <button class="nav-item" data-target="career-panel">Careers</button>
+            <button class="nav-item" data-target="game-panel">Game Entry</button>
+            <button class="nav-item" data-target="attributes-panel">Attributes</button>
+            <button class="nav-item" data-target="badges-panel">Badges</button>
+            <button class="nav-item" data-target="archetype-panel">Archetypes</button>
+            <button class="nav-item" data-target="export-panel">Save / Export</button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <p>Engine: Slimmamba x Synergy2K<br>Data: NBA 2K26</p>
+        </div>
+    </aside>
+
+    <!-- MAIN AREA -->
+    <main class="main">
+
+        <!-- TOP BAR (Active Career summary) -->
+        <header class="topbar">
+            <div class="topbar-left">
+                <h2 id="topbar-title">Dashboard</h2>
+                <p class="topbar-sub">Manage your MyLEAGUE / MyNBA player using Synergy2K logic.</p>
+            </div>
+            <div class="topbar-right">
+                <div class="topbar-stat">
+                    <span class="label">Active Career</span>
+                    <span class="value" id="active-career-name">None</span>
+                </div>
+                <div class="topbar-stat">
+                    <span class="label">XP</span>
+                    <span class="value" id="active-career-xp">0</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- PANELS WRAPPER -->
+        <section class="panels">
+
+            <!-- DASHBOARD PANEL -->
+            <section class="panel active" id="dashboard-panel">
+                <h3>Welcome to Synergy2K Next-Gen</h3>
+                <p>
+                    This is a browser-based reimagining of Synergy2K, updated for
+                    <strong>NBA 2K26</strong> with full attribute and badge support, plus
+                    Slimmamba-style XP and your custom rules
+                    (Blown Lead penalty, Bad Plus/Minus, SimMamba difficulty, Legend badge tier).
+                </p>
+                <ul class="bullet-list">
+                    <li><strong>Careers:</strong> Create, load, delete and export player files.</li>
+                    <li><strong>Game Entry:</strong> Enter full box scores to earn XP.</li>
+                    <li><strong>Attributes:</strong> Upgrade the full NBA 2K26 attribute tree.</li>
+                    <li><strong>Badges:</strong> Assign badge tiers from None → Legend.</li>
+                    <li><strong>Archetypes:</strong> Quick templates for builds (Slasher, Sharp, Lock, etc.).</li>
+                    <li><strong>Save / Export:</strong> Backup and import careers as JSON files.</li>
+                </ul>
+            </section>
+
+            <!-- CAREER MANAGER PANEL -->
+            <section class="panel" id="career-panel">
+                <h3>Career Manager</h3>
+                <div class="panel-inner">
+                    <div class="row">
+                        <button id="create-career-btn" class="btn primary">Create Career</button>
+                        <button id="export-all-btn" class="btn">Export All Careers</button>
+                    </div>
+
+                    <h4>Saved Careers</h4>
+                    <select id="career-select"></select>
+
+                    <div id="career-list"></div>
+                </div>
+            </section>
+
+            <!-- GAME ENTRY PANEL -->
+            <section class="panel" id="game-panel">
+                <h3>Game Entry (Slimmamba Engine)</h3>
+                <div class="panel-inner">
+                    <form id="game-form">
+                        <h4>Box Score</h4>
+                        <div class="grid-3">
+                            <input id="pts" type="number" placeholder="Points">
+                            <input id="reb" type="number" placeholder="Rebounds">
+                            <input id="ast" type="number" placeholder="Assists">
+                            <input id="stl" type="number" placeholder="Steals">
+                            <input id="blk" type="number" placeholder="Blocks">
+                            <input id="tov" type="number" placeholder="Turnovers">
+                        </div>
+
+                        <h4>Shooting Splits</h4>
+                        <div class="grid-3">
+                            <input id="fgm" type="number" placeholder="FGM">
+                            <input id="fga" type="number" placeholder="FGA">
+                            <input id="tpm" type="number" placeholder="3PM">
+                            <input id="tpa" type="number" placeholder="3PA">
+                            <input id="ftm" type="number" placeholder="FTM">
+                            <input id="fta" type="number" placeholder="FTA">
+                        </div>
+
+                        <h4>Game Context</h4>
+                        <div class="grid-3">
+                            <select id="win">
+                                <option value="yes">Win</option>
+                                <option value="no">Loss</option>
+                            </select>
+
+                            <select id="blown-lead">
+                                <option value="no">No Blown Lead</option>
+                                <option value="yes">Blown 10+ Point Lead</option>
+                            </select>
+
+                            <input id="plus-minus" type="number" placeholder="+ / -">
+                        </div>
+
+                        <h4>Difficulty</h4>
+                        <div id="difficulty-container">
+                            <label><input type="radio" name="difficulty" value="rookie"> Rookie</label>
+                            <label><input type="radio" name="difficulty" value="pro" checked> Pro</label>
+                            <label><input type="radio" name="difficulty" value="allstar"> All-Star</label>
+                            <label><input type="radio" name="difficulty" value="superstar"> Superstar</label>
+                            <label><input type="radio" name="difficulty" value="halloffame"> Hall of Fame</label>
+                            <label class="simmamba"><input type="radio" name="difficulty" value="simmamba"> SimMamba</label>
+                        </div>
+
+                        <div class="row">
+                            <button id="calc-xp-btn" type="button" class="btn primary">Calculate XP</button>
+                            <button type="submit" class="btn green">Save Game</button>
+                        </div>
+
+                        <div id="xp-result"></div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- ATTRIBUTES PANEL -->
+            <section class="panel" id="attributes-panel">
+                <h3>Attributes (NBA 2K26 Tree)</h3>
+                <div class="panel-inner">
+                    <div id="attributes-container"></div>
+                    <div class="row">
+                        <button id="save-attributes-btn" class="btn green">Save Attributes</button>
+                        <button id="reset-attributes-btn" class="btn">Reset</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- BADGES PANEL -->
+            <section class="panel" id="badges-panel">
+                <h3>Badge Lab (2K26 + Legend)</h3>
+                <div class="panel-inner">
+                    <div id="badge-filters">
+                        <button class="filter-btn active" data-filter="all">All</button>
+                        <button class="filter-btn" data-filter="finishing">Finishing</button>
+                        <button class="filter-btn" data-filter="shooting">Shooting</button>
+                        <button class="filter-btn" data-filter="playmaking">Playmaking</button>
+                        <button class="filter-btn" data-filter="defense">Defense</button>
+                        <button class="filter-btn" data-filter="rebounding">Rebounding</button>
+                        <button class="filter-btn" data-filter="allaround">All-Around</button>
+                        <button class="filter-btn" data-filter="custom">Custom</button>
+                    </div>
+
+                    <div class="legend-toggle-row">
+                        <span>Show Legend tier:</span>
+                        <label class="switch">
+                            <input type="checkbox" id="legend-toggle" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div id="badge-container"></div>
+
+                    <div class="row">
+                        <button id="clear-badges-btn" class="btn">Clear All Badges</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ARCHETYPES PANEL -->
+            <section class="panel" id="archetype-panel">
+                <h3>Archetypes</h3>
+                <div class="panel-inner">
+                    <p>Select a template. You can still edit attributes afterwards.</p>
+                    <div id="archetype-container"></div>
+                </div>
+            </section>
+
+            <!-- SAVE / EXPORT PANEL -->
+            <section class="panel" id="export-panel">
+                <h3>Save / Export</h3>
+                <div class="panel-inner">
+                    <div class="row">
+                        <button id="export-career-btn" class="btn primary">Export Active Career</button>
+                        <button id="export-all-btn" class="btn">Export All Careers</button>
+                    </div>
+
+                    <div class="row">
+                        <input type="file" id="import-file" accept=".json">
+                        <button id="import-career-btn" class="btn green">Import Career</button>
+                    </div>
+
+                    <div id="export-output"></div>
+                </div>
+            </section>
+
+        </section>
+    </main>
+</div>
+
+<!-- ENGINE -->
+<script src="app.js"></script>
+
+<!-- Sidebar navigation logic -->
+<script>
+document.querySelectorAll(".nav-item").forEach(btn => {
+    btn.addEventListener("click", () => {
+        // set active nav
+        document.querySelectorAll(".nav-item").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        // show corresponding panel
+        const targetId = btn.dataset.target;
+        document.querySelectorAll(".panel").forEach(panel => {
+            panel.classList.toggle("active", panel.id === targetId);
+        });
+
+        // update topbar title
+        const titleMap = {
+            "dashboard-panel": "Dashboard",
+            "career-panel": "Career Manager",
+            "game-panel": "Game Entry",
+            "attributes-panel": "Attributes",
+            "badges-panel": "Badges",
+            "archetype-panel": "Archetypes",
+            "export-panel": "Save / Export"
+        };
+        const title = titleMap[targetId] || "Synergy2K";
+        document.getElementById("topbar-title").textContent = title;
+    });
+});
+</script>
+
+</body>
+</html>
