@@ -1,0 +1,395 @@
+/* ===========================================================
+   Synergy2K Plus • Next-Gen Web Version • NBA 2K26
+   Clean dark UI • Sidebar navigation • Panel workspace
+=========================================================== */
+
+/* GLOBAL --------------------------------------------------- */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Inter", sans-serif;
+}
+
+body {
+    background: #0c0c0e;
+    color: #fff;
+    overflow-x: hidden;
+}
+
+h1, h2, h3, h4 {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+/* APP LAYOUT ------------------------------------------------ */
+.app-shell {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* SIDEBAR --------------------------------------------------- */
+.sidebar {
+    width: 260px;
+    background: #111114;
+    border-right: 1px solid #1e1e23;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+.sidebar-logo h1 {
+    font-size: 26px;
+    letter-spacing: 1px;
+    margin-bottom: 2px;
+}
+
+.sidebar-logo .tagline {
+    font-size: 12px;
+    opacity: 0.6;
+}
+
+/* NAV BUTTONS ---------------------------------------------- */
+.sidebar-nav {
+    margin-top: 25px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.nav-item {
+    background: #1a1a1f;
+    border: 1px solid #2a2a32;
+    color: #fff;
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: 0.2s;
+    font-size: 15px;
+}
+
+.nav-item:hover {
+    background: #24242d;
+}
+
+.nav-item.active {
+    background: #0078ff;
+    border-color: #0078ff;
+}
+
+/* SIDEBAR FOOTER ------------------------------------------- */
+.sidebar-footer {
+    margin-top: auto;
+    font-size: 12px;
+    opacity: 0.6;
+    padding-top: 20px;
+}
+
+/* MAIN CONTENT --------------------------------------------- */
+.main {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+}
+
+/* TOPBAR ---------------------------------------------------- */
+.topbar {
+    padding: 20px 25px;
+    background: #131318;
+    border-bottom: 1px solid #1f1f25;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.topbar-left h2 {
+    font-size: 24px;
+    margin-bottom: 4px;
+}
+
+.topbar-sub {
+    opacity: 0.7;
+    font-size: 14px;
+}
+
+.topbar-right {
+    display: flex;
+    gap: 20px;
+}
+
+.topbar-stat {
+    text-align: right;
+}
+
+.topbar-stat .label {
+    font-size: 12px;
+    opacity: 0.6;
+}
+
+.topbar-stat .value {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+/* PANELS ---------------------------------------------------- */
+.panels {
+    padding: 25px;
+}
+
+.panel {
+    background: #16161b;
+    border: 1px solid #23232a;
+    border-radius: 12px;
+    padding: 20px;
+    display: none;
+    animation: fadeIn 0.25s ease;
+}
+
+.panel.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* BUTTONS --------------------------------------------------- */
+.btn {
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    transition: 0.2s;
+    color: #fff;
+    background: #2a2a31;
+}
+
+.btn:hover {
+    background: #313139;
+}
+
+.btn.primary {
+    background: #0078ff;
+}
+
+.btn.primary:hover {
+    background: #0066d6;
+}
+
+.btn.green {
+    background: #00b94d;
+}
+
+.btn.green:hover {
+    background: #00a344;
+}
+
+.btn.danger {
+    background: #cc2e2e;
+}
+
+.btn.danger:hover {
+    background: #b42626;
+}
+
+.row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* FORMS ----------------------------------------------------- */
+input, select {
+    background: #1e1e23;
+    border: 1px solid #2c2c34;
+    color: #fff;
+    padding: 10px;
+    border-radius: 8px;
+    font-size: 15px;
+    width: 100%;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+@media (max-width: 700px) {
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ATTRIBUTE PANEL ------------------------------------------ */
+.attribute-group {
+    background: #1b1b21;
+    border: 1px solid #2c2c34;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 15px;
+}
+
+.attribute-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 10px;
+}
+
+.attribute-input {
+    width: 70px;
+    text-align: center;
+    background: #0f0f12;
+}
+
+/* BADGES ---------------------------------------------------- */
+#badge-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.filter-btn {
+    padding: 6px 12px;
+    background: #1c1c22;
+    border: 1px solid #2a2a32;
+    border-radius: 6px;
+    cursor: pointer;
+}
+
+.filter-btn.active,
+.filter-btn:hover {
+    background: #0078ff;
+}
+
+.legend-toggle-row {
+    margin: 10px 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#badge-container {
+    margin-top: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.badge-card {
+    background: #1b1b21;
+    border: 1px solid #2c2c34;
+    text-align: center;
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.badge-level {
+    display: inline-block;
+    padding: 4px 6px;
+    margin: 2px;
+    background: #2a2a31;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 13px;
+}
+
+.badge-level.active {
+    background: #00b94d;
+}
+
+.badge-level.legend {
+    background: #bb00ff;
+}
+
+/* TOGGLE SWITCH -------------------------------------------- */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 48px;
+    height: 24px;
+}
+
+.switch input { display: none; }
+
+.slider {
+    position: absolute;
+    top: 0; left: 0;
+    right: 0; bottom: 0;
+    background: #555;
+    border-radius: 24px;
+    transition: .3s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 18px;
+    width: 18px;
+    left: 3px;
+    bottom: 3px;
+    background: #fff;
+    border-radius: 50%;
+    transition: .3s;
+}
+
+input:checked + .slider {
+    background: #00b94d;
+}
+
+input:checked + .slider:before {
+    transform: translateX(24px);
+}
+
+/* ARCHETYPES ------------------------------------------------ */
+#archetype-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px,1fr));
+    gap: 12px;
+}
+
+.archetype-card {
+    background: #1d1d24;
+    border: 1px solid #2a2a32;
+    padding: 12px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.archetype-card:hover {
+    background: #0078ff;
+}
+
+/* EXPORT / IMPORT ------------------------------------------ */
+#export-output {
+    margin-top: 15px;
+    background: #131318;
+    border: 1px solid #24242b;
+    padding: 10px;
+    border-radius: 8px;
+    white-space: pre-wrap;
+    max-height: 300px;
+    overflow-y: auto;
+}
+
+/* SCROLLBARS ------------------------------------------------ */
+::-webkit-scrollbar {
+    width: 10px;
+}
+::-webkit-scrollbar-track {
+    background: #111;
+}
+::-webkit-scrollbar-thumb {
+    background: #333;
+    border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #444;
+}
