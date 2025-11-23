@@ -1,397 +1,399 @@
-/* Synergy 2K26 — Browser MyCareer (Option C, Slimmamba rules + extras)
-   - Offline (localStorage)
-   - Base stat points, efficiency bonuses, penalties
-   - Hybrid badges (attribute unlock + XP)
-   - Option C attributes (category sliders + individual attributes)
-   - Multiple careers, export/import
-*/
+/* ----------------------------------------------------------
+   SYNERGY 2K26 — MAIN ENGINE (app.js)
+   Works with index.html + style.css you already have
+---------------------------------------------------------- */
 
-/* ---------- Utilities ---------- */
-const qs=(s)=>document.querySelector(s);
-const qsa=(s)=>Array.from(document.querySelectorAll(s));
-const STORAGE_KEY='synergy2k_careers_v1';
+/* ----------------------------------------------------------
+   NBA 2K26 — FULL ATTRIBUTE LIST (MyLEAGUE / MyNBA)
+---------------------------------------------------------- */
+const ATTRIBUTE_GROUPS = {
+    "Inside Scoring": [
+        "Close Shot",
+        "Driving Layup",
+        "Driving Dunk",
+        "Standing Dunk",
+        "Post Control",
+        "Post Hook",
+        "Post Fade"
+    ],
+    "Outside Scoring": [
+        "Mid-Range Shot",
+        "Three-Point Shot",
+        "Free Throw",
+        "Shot IQ",
+        "Offensive Consistency"
+    ],
+    "Playmaking": [
+        "Ball Handle",
+        "Speed With Ball",
+        "Pass Accuracy",
+        "Pass Vision",
+        "Pass IQ"
+    ],
+    "Defense": [
+        "Interior Defense",
+        "Perimeter Defense",
+        "Steal",
+        "Block",
+        "Lateral Quickness",
+        "Help Defense IQ",
+        "Defensive Consistency"
+    ],
+    "Rebounding": [
+        "Offensive Rebound",
+        "Defensive Rebound"
+    ],
+    "Physicals": [
+        "Speed",
+        "Acceleration",
+        "Strength",
+        "Vertical",
+        "Stamina",
+        "Hustle"
+    ],
+    "Mental": [
+        "Offensive Awareness",
+        "Defensive Awareness",
+        "Hands",
+        "Pass Perception"
+    ]
+};
 
-/* ---------- Default data models ---------- */
+/* ----------------------------------------------------------
+   NBA 2K26 — OFFICIAL BADGES
+---------------------------------------------------------- */
 const BADGES = {
-  "Finishing":["Posterizer","Fearless Finisher","Acrobat","Lob City Finisher","Relentless Finisher"],
-  "Shooting":["Deadeye","Limitless Range","Corner Specialist","Catch & Shoot","Hot Zone Hunter"],
-  "Playmaking":["Dimer","Ankle Breaker","Floor General","Handles for Days","Quick First Step"],
-  "Defense":["Clamps","Intimidator","Rim Protector","Pick Pocket","Chase Down Artist"],
-  "Physical":["Box","Bulldozer","Fast Twitch","Durable","Run & Gun"],
-  // you can add more 2K26-specific badges here
+    finishing: [
+        "Aerial Wizard",
+        "Float Game",
+        "Hook Specialist",
+        "Posterizer",
+        "Rise Up",
+        "Acrobat",
+        "Slithery",
+        "Fearless Finisher",
+        "Giant Slayer",
+        "Fast Twitch"
+    ],
+    shooting: [
+        "Deadeye",
+        "Limitless Range",
+        "Mini Marksman",
+        "Agent 3",
+        "Space Creator"
+    ],
+    playmaking: [
+        "Ankle Assassin",
+        "Dimer",
+        "Handles For Days",
+        "Quick First Step",
+        "Unpluckable",
+        "Bail Out",
+        "Needle Threader",
+        "Floor General"
+    ],
+    defense: [
+        "Challenger",
+        "Glove",
+        "Anchor",
+        "Clamps",
+        "Chase Down Artist",
+        "Menace",
+        "Workhorse",
+        "Boxout Beast",
+        "Rebound Chaser",
+        "Post Lockdown"
+    ],
+    rebounding: [
+        "Boxout Beast",
+        "Rebound Chaser"
+    ],
+    allaround: [
+        "On-Court Coach",
+        "Leader Badge",
+        "Stabilizer"
+    ],
+    custom: [
+        "Blown Lead",
+        "Bad Plus/Minus"
+    ]
 };
 
-const ATTRIBUTES = {
-  "Finishing":["Close Shot","Driving Layup","Driving Dunk","Standing Dunk","Post Hook"],
-  "Shooting":["Mid Range","Three Pointer","Shot IQ","Free Throw","Contested Shot"],
-  "Playmaking":["Ball Handle","Passing Accuracy","Speed With Ball","Post Control"],
-  "Defense":["Perimeter Defense","Interior Defense","Steal","Block"],
-  "Physical":["Speed","Acceleration","Strength","Stamina","Vertical"]
+/* ----------------------------------------------------------
+   DIFFICULTY MULTIPLIERS
+---------------------------------------------------------- */
+const DIFFICULTY = {
+    rookie: 0.80,
+    pro: 1.00,
+    allstar: 1.10,
+    superstar: 1.25,
+    halloffame: 1.50,
+    simmamba: 1.35
 };
 
-/* ---------- Persistence ---------- */
-function loadAllCareers(){ return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]'); }
-function saveAllCareers(list){ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }
-
-/* ---------- Career helpers ---------- */
-function createEmptyCareer(name){
-  const attrs = {};
-  for(const cat in ATTRIBUTES){
-    attrs[cat] = {category_level:50};
-    ATTRIBUTES[cat].forEach(a=> attrs[a]=50);
-  }
-  const badges = {};
-  for(const cat in BADGES) BADGES[cat].forEach(b=> badges[b]={xp:0, unlocked:false, tier:'Locked'});
-  return {
-    id: 'c-'+Date.now(),
-    name,
-    playerName: '',
-    points_total:0,
-    points_available:0,
-    games:[],
-    attributes: attrs,
-    badges: badges,
-    created_at: new Date().toISOString()
-  };
+/* ----------------------------------------------------------
+   CAREER STORAGE
+---------------------------------------------------------- */
+function loadCareers() {
+    return JSON.parse(localStorage.getItem("synergy_careers") || "[]");
+}
+function saveCareers(list) {
+    localStorage.setItem("synergy_careers", JSON.stringify(list));
 }
 
-/* ---------- App state ---------- */
-let CAREERS = loadAllCareers();
-let CURRENT = null;
+/* ----------------------------------------------------------
+   RENDER CAREERS MENU
+---------------------------------------------------------- */
+function renderCareerList() {
+    const careers = loadCareers();
+    const list = document.getElementById("careers-list");
+    const select = document.getElementById("career-select");
 
-/* ---------- Render: Careers list ---------- */
-function renderCareers(){
-  const el = qs('#careers-list');
-  el.innerHTML = '';
-  CAREERS.forEach((c,i)=>{
-    const btn = document.createElement('button');
-    btn.textContent = `${c.name} — Points: ${c.points_total} (Avail: ${c.points_available})`;
-    btn.onclick = ()=> { CURRENT = c; renderAll(); };
-    el.appendChild(btn);
-  });
-}
+    list.innerHTML = "";
+    select.innerHTML = `<option value="">No career selected</option>`;
 
-/* ---------- Render: main UI ---------- */
-function renderAll(){
-  renderCareers();
-  renderHeader();
-  renderProgress();
-  renderAttributesUI();
-  renderBadgesUI();
-}
+    careers.forEach((c, index) => {
+        // Select dropdown
+        const opt = document.createElement("option");
+        opt.value = index;
+        opt.textContent = c.name;
+        select.appendChild(opt);
 
-function renderHeader(){
-  qs('#career-selected').textContent = CURRENT ? `${CURRENT.name} — Points Avail: ${CURRENT.points_available}` : 'No career selected';
-  if(CURRENT) qs('#player-name').value = CURRENT.playerName || '';
-}
-
-/* ---------- Calculation rules (as agreed) ---------- */
-const BASE = { pts:1, reb:2, ast:1, stl:3, blk:3, to:-2 };
-const WIN_BONUS = 10;
-
-function efficiencyBonuses(stats){
-  let bonus=0; const details=[];
-  const fgPct = stats.fga ? (stats.fgm/stats.fga)*100 : 0;
-  const tpPct = stats.tpa ? (stats.tpm/stats.tpa)*100 : 0;
-  const ftPct = stats.fta ? (stats.ftm/stats.fta)*100 : 0;
-  if(fgPct>=70){ bonus+=15; details.push('FG%>=70 +15'); }
-  else if(fgPct>=60){ bonus+=10; details.push('FG%>=60 +10'); }
-  else if(fgPct>=50){ bonus+=5; details.push('FG%>=50 +5'); }
-  if(tpPct>=60){ bonus+=15; details.push('3PT%>=60 +15'); }
-  else if(tpPct>=50){ bonus+=10; details.push('3PT%>=50 +10'); }
-  else if(tpPct>=40){ bonus+=5; details.push('3PT%>=40 +5'); }
-  if(ftPct>=85){ bonus+=5; details.push('FT%>=85 +5'); }
-  return {bonus,details,fgPct,tpPct,ftPct};
-}
-
-function penalties(stats){
-  let pen=0; const details=[];
-  const fgPct = stats.fga ? (stats.fgm/stats.fga)*100 : 0;
-  const tpPct = stats.tpa ? (stats.tpm/stats.tpa)*100 : 0;
-  if(fgPct<=35){ pen+=5; details.push('FG%<=35 -5'); }
-  if(tpPct<=25){ pen+=5; details.push('3PT%<=25 -5'); }
-  if(stats.to>=6){ pen+=5; details.push('6+ TOs -5'); }
-  if(stats.foul_out){ pen+=10; details.push('Foul out -10'); }
-  if(stats.blown_lead){ pen+=10; details.push('Blown lead -10'); }
-  if(stats.plusminus <= -10){ const amt = Math.min(20, Math.abs(stats.plusminus)); pen += Math.round(amt/2); details.push('Bad +/- penalty'); }
-  return {pen,details,fgPct,tpPct};
-}
-
-function dd_td_bonus(stats){
-  const cnt = [stats.pts>=10, stats.reb>=10, stats.ast>=10, stats.stl>=10, stats.blk>=10].filter(Boolean).length;
-  if(cnt>=3) return {bonus:15,desc:'Triple-double +15'};
-  if(cnt>=2) return {bonus:5,desc:'Double-double +5'};
-  return {bonus:0,desc:''};
-}
-
-function calculateGamePoints(stats){
-  let total=0;
-  total += (stats.pts||0)*BASE.pts;
-  total += (stats.reb||0)*BASE.reb;
-  total += (stats.ast||0)*BASE.ast;
-  total += (stats.stl||0)*BASE.stl;
-  total += (stats.blk||0)*BASE.blk;
-  total += (stats.to||0)*BASE.to;
-  if(stats.win) total += WIN_BONUS;
-  const ddtd = dd_td_bonus(stats);
-  total += ddtd.bonus;
-  const eff = efficiencyBonuses(stats);
-  total += eff.bonus;
-  const pen = penalties(stats);
-  total -= pen.pen;
-  const beforeMult = total;
-  const multiplied = Math.round(total * (stats.difficulty||1));
-  return { base: beforeMult, multiplied, details:{eff,pen,ddtd} };
-}
-
-/* ---------- Badge XP mapping (simplified, tweakable) ---------- */
-function badgeXpGain(stats){
-  const gains = {};
-  // shooting-related
-  gains['Catch & Shoot'] = (stats.tpm||0)*2;
-  gains['Limitless Range'] = (stats.tpm||0)*1;
-  gains['Deadeye'] = (stats.tpm||0)*1 + ((stats.fgm||0)>0 && (stats.fgm/(stats.fga||1))*100>=50?2:0);
-  // finishing
-  gains['Posterizer'] = (stats.dunks||0)*5 || 0;
-  gains['Fearless Finisher'] = (stats.pts>=20?5:0);
-  // playmaking
-  gains['Dimer'] = (stats.ast||0)*2;
-  gains['Ankle Breaker'] = (stats.assistsForStyle||0)*1; // placeholder
-  // defense
-  gains['Pick Pocket'] = (stats.stl||0)*3;
-  gains['Chase Down Artist'] = (stats.blk||0)*3;
-  // default small xp for minutes
-  gains['Durable'] = Math.floor((stats.minutes||0)/5);
-  return gains;
-}
-
-/* ---------- DOM: Calculate & apply game ---------- */
-qs('#btn-calc').onclick = ()=>{
-  if(!CURRENT) return alert('Select a career first');
-  const stats = readForm();
-  const res = calculateGamePoints(stats);
-  const eff = res.details.eff;
-  const pen = res.details.pen;
-  const dd = res.details.ddtd;
-  qs('#calc-output').textContent = `Base ${res.base} · After difficulty ${res.multiplied} · Eff [+${eff.bonus}] Pen [-${pen.pen}] ${dd.desc}`;
-};
-
-function readForm(){
-  return {
-    minutes: Number(qs('#minutes').value||0),
-    pts: Number(qs('#pts').value||0),
-    reb: Number(qs('#reb').value||0),
-    ast: Number(qs('#ast').value||0),
-    stl: Number(qs('#stl').value||0),
-    blk: Number(qs('#blk').value||0),
-    to: Number(qs('#to').value||0),
-    fgm: Number(qs('#fgm').value||0),
-    fga: Number(qs('#fga').value||0),
-    tpm: Number(qs('#tpm').value||0),
-    tpa: Number(qs('#tpa').value||0),
-    ftm: Number(qs('#ftm').value||0),
-    fta: Number(qs('#fta').value||0),
-    win: qs('#win').checked,
-    difficulty: Number(qs('#difficulty').value||1),
-    blown_lead: qs('#blown').checked,
-    foul_out: false,
-    plusminus: Number(qs('#plusminus').value||0),
-    // optional extras
-    dunks: 0
-  };
-}
-
-qs('#btn-apply').onclick = ()=>{
-  if(!CURRENT) return alert('Select a career first');
-  // update player name
-  CURRENT.playerName = qs('#player-name').value || CURRENT.playerName || 'Player';
-  const stats = readForm();
-  const res = calculateGamePoints(stats);
-  CURRENT.games.push({stats,calc:res,ts:new Date().toISOString()});
-  CURRENT.points_total = (CURRENT.points_total||0) + res.base;
-  CURRENT.points_available = (CURRENT.points_available||0) + res.multiplied;
-  // badge xp
-  const gains = badgeXpGain(stats);
-  for(const b in gains){
-    if(CURRENT.badges[b] !== undefined) CURRENT.badges[b].xp += gains[b];
-  }
-  saveCurrent();
-  renderAll();
-  alert(`Game saved. Points awarded: ${res.multiplied}`);
-};
-
-/* ---------- Save / Load current ---------- */
-function saveCurrent(){
-  CAREERS = CAREERS.map(c => c.id===CURRENT.id ? CURRENT : c);
-  saveAllCareers(CAREERS);
-}
-
-/* ---------- Create career / import / export ---------- */
-qs('#btn-new-career').onclick = ()=>{
-  const name = qs('#new-career-name').value.trim();
-  if(!name) return alert('Enter a career name');
-  const c = createEmptyCareer(name);
-  CAREERS.unshift(c);
-  CURRENT = c;
-  saveAllCareers(CAREERS);
-  renderAll();
-  qs('#new-career-name').value='';
-};
-
-qs('#btn-export-all').onclick = ()=>{
-  const blob = new Blob([JSON.stringify(CAREERS,null,2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href=url; a.download='synergy2k_careers_export.json'; a.click();
-  URL.revokeObjectURL(url);
-};
-
-qs('#import-file').onchange = (e)=>{
-  const f = e.target.files[0]; if(!f) return;
-  const r = new FileReader();
-  r.onload = ()=> {
-    try {
-      const imported = JSON.parse(r.result);
-      // simple merge
-      imported.forEach(ic=> CAREERS.push(ic));
-      saveAllCareers(CAREERS);
-      renderAll();
-      alert('Imported careers');
-    } catch(err){ alert('Invalid file'); }
-  };
-  r.readAsText(f);
-};
-
-/* ---------- Progress render ---------- */
-function renderProgress(){
-  if(!CURRENT){ qs('#progress-summary').textContent='No career selected'; qs('#games-list').innerHTML=''; return; }
-  qs('#progress-summary').innerHTML = `<strong>${CURRENT.name}</strong> — Player: ${CURRENT.playerName||'N/A'} · Total: ${CURRENT.points_total||0} · Available: ${CURRENT.points_available||0}`;
-  const gl = qs('#games-list'); gl.innerHTML='';
-  (CURRENT.games||[]).slice().reverse().forEach((g,i)=>{
-    const d = document.createElement('div'); d.className='game';
-    d.innerHTML = `<div><strong>Game ${CURRENT.games.length - i}</strong> • ${new Date(g.ts).toLocaleString()}</div>
-                   <div class="muted">PTS ${g.stats.pts} AST ${g.stats.ast} REB ${g.stats.reb} • Points: ${g.calc.multiplied}</div>`;
-    gl.appendChild(d);
-  });
-}
-
-/* ---------- Attributes UI (Option C) ---------- */
-function renderAttributesUI(){
-  if(!CURRENT){ qs('#attr-categories').textContent='No career selected'; qs('#attr-individual').innerHTML=''; return; }
-  const catsEl = qs('#attr-categories'); catsEl.innerHTML='';
-  for(const cat in ATTRIBUTES){
-    const wrapper = document.createElement('div'); wrapper.className='row';
-    const slider = document.createElement('input'); slider.type='range'; slider.min=1; slider.max=99;
-    slider.value = CURRENT.attributes[cat].category_level || 50;
-    const label = document.createElement('label'); label.textContent = `${cat} (Category) `;
-    const val = document.createElement('span'); val.textContent = slider.value;
-    slider.oninput = ()=>{
-      val.textContent = slider.value;
-      CURRENT.attributes[cat].category_level = Number(slider.value);
-      // soft-apply to related individual attributes
-      ATTRIBUTES[cat].forEach(attr=>{
-        const prev = CURRENT.attributes[attr]||50;
-        CURRENT.attributes[attr] = Math.max(1, Math.min(99, Math.round((prev + Number(slider.value))/2)));
-      });
-    };
-    wrapper.appendChild(label); wrapper.appendChild(slider); wrapper.appendChild(val);
-    catsEl.appendChild(wrapper);
-  }
-  // individual attributes
-  const indEl = qs('#attr-individual'); indEl.innerHTML='';
-  for(const cat in ATTRIBUTES){
-    ATTRIBUTES[cat].forEach(attr=>{
-      const row = document.createElement('div'); row.className='row';
-      const lbl = document.createElement('label'); lbl.textContent = attr;
-      const input = document.createElement('input'); input.type='number'; input.min=1; input.max=99;
-      input.value = CURRENT.attributes[attr] || 50;
-      input.onchange = ()=> { CURRENT.attributes[attr] = Number(input.value); };
-      row.appendChild(lbl); row.appendChild(input);
-      indEl.appendChild(row);
+        // List view
+        const div = document.createElement("div");
+        div.className = "saved-career-entry";
+        div.innerHTML = `
+            <h4>${c.name}</h4>
+            <p>Points: ${c.points}</p>
+            <div class="saved-career-btns">
+                <button class="btn primary" onclick="selectCareer(${index})">Load</button>
+                <button class="btn danger" onclick="deleteCareer(${index})">Delete</button>
+            </div>
+        `;
+        list.appendChild(div);
     });
-  }
-  qs('#btn-save-attrs').onclick = ()=> { saveCurrent(); alert('Attributes saved'); renderBadgesUI(); };
 }
 
-/* ---------- Badges UI ---------- */
-function renderBadgesUI(){
-  const container = qs('#badges-list');
-  if(!CURRENT){ container.textContent='No career selected'; return; }
-  container.innerHTML = '';
-  for(const cat in BADGES){
-    const box = document.createElement('div'); box.className='card';
-    box.innerHTML = `<h4>${cat}</h4>`;
-    BADGES[cat].forEach(b=>{
-      const info = CURRENT.badges[b] || {xp:0,tier:'Locked'};
-      const xp = info.xp || 0;
-      let tier = 'Locked';
-      if(xp>=1500) tier='Legend';
-      else if(xp>=700) tier='HoF';
-      else if(xp>=350) tier='Gold';
-      else if(xp>=150) tier='Silver';
-      else if(xp>=0) tier='Bronze';
-      // attribute-based unlock: simple rule: if any related attribute >=60 then unlocked
-      const relatedUnlock = ATTRIBUTES[cat] && ATTRIBUTES[cat].some(a => (CURRENT.attributes[a]||0) >= 60);
-      const unlockedText = relatedUnlock ? '' : ' (locked — raise attributes)';
-      const pill = `<span class="badge-pill">${b} — ${tier}${unlockedText} — XP ${xp}</span>`;
-      box.innerHTML += pill;
+/* ----------------------------------------------------------
+   CREATE CAREER
+---------------------------------------------------------- */
+document.getElementById("create-career-btn").onclick = () => {
+    const name = prompt("Enter career name:");
+    if (!name) return;
+
+    const careers = loadCareers();
+    careers.push({
+        name,
+        points: 0,
+        attributes: createDefaultAttributes(),
+        badges: {},
+        games: []
     });
-    container.appendChild(box);
-  }
-}
 
-/* ---------- Spending UI (simple) ---------- */
-qs('#btn-spend').onclick = ()=>{
-  if(!CURRENT) return alert('Select a career first');
-  const avail = CURRENT.points_available || 0;
-  if(avail<=0) return alert('No points available');
-  const choice = prompt(`You have ${avail} points available.\nType attribute name to raise (exact), or category name to raise category. Example: "Three Pointer" or "Shooting".`);
-  if(!choice) return;
-  // try attribute exact match
-  if(CURRENT.attributes[choice] !== undefined){
-    const amt = Number(prompt('How many points to spend?', '5')) || 0;
-    CURRENT.attributes[choice] = Math.min(99, (CURRENT.attributes[choice]||50) + amt);
-    CURRENT.points_available = Math.max(0, avail - amt);
-    saveCurrent(); renderAll();
-    return alert(`Spent ${amt} on ${choice}`);
-  }
-  // try category
-  if(CURRENT.attributes[choice] && typeof CURRENT.attributes[choice].category_level !== 'undefined'){
-    const amt = Number(prompt('How many points to spend?', '5')) || 0;
-    CURRENT.attributes[choice].category_level = Math.min(99, (CURRENT.attributes[choice].category_level||50) + amt);
-    // soft-apply to members
-    ATTRIBUTES[choice].forEach(a=> CURRENT.attributes[a] = Math.min(99, (CURRENT.attributes[a]||50) + Math.round(amt/2)));
-    CURRENT.points_available = Math.max(0, avail - amt);
-    saveCurrent(); renderAll();
-    return alert(`Spent ${amt} on category ${choice}`);
-  }
-  alert('Attribute or category not found. Make sure the spelling is exact (case-sensitive).');
+    saveCareers(careers);
+    renderCareerList();
 };
 
-/* ---------- Reset career ---------- */
-qs('#btn-reset').onclick = ()=>{
-  if(!CURRENT) return alert('Select a career first');
-  if(!confirm('Reset this career (erase games, points, badges)?')) return;
-  const idx = CAREERS.findIndex(c=>c.id===CURRENT.id);
-  if(idx>=0){ CAREERS[idx] = createEmptyCareer(CURRENT.name); CURRENT = CAREERS[idx]; saveAllCareers(CAREERS); renderAll(); }
+/* ----------------------------------------------------------
+   DEFAULT ATTRIBUTE STRUCTURE
+---------------------------------------------------------- */
+function createDefaultAttributes() {
+    const obj = {};
+    for (const group in ATTRIBUTE_GROUPS) {
+        ATTRIBUTE_GROUPS[group].forEach(att => {
+            obj[att] = 25; // starting rating
+        });
+    }
+    return obj;
+}
+
+/* ----------------------------------------------------------
+   SELECT CAREER
+---------------------------------------------------------- */
+let activeCareerIndex = null;
+
+function selectCareer(i) {
+    activeCareerIndex = i;
+    const career = loadCareers()[i];
+
+    document.getElementById("selected-career-name").textContent = career.name;
+    document.getElementById("available-points").textContent = career.points;
+
+    renderAttributes(career.attributes);
+    renderBadges(career.badges);
+}
+
+/* ----------------------------------------------------------
+   DELETE CAREER
+---------------------------------------------------------- */
+function deleteCareer(i) {
+    const careers = loadCareers();
+    careers.splice(i, 1);
+    saveCareers(careers);
+    activeCareerIndex = null;
+    renderCareerList();
+}
+
+/* ----------------------------------------------------------
+   RENDER ATTRIBUTES UI
+---------------------------------------------------------- */
+function renderAttributes(current) {
+    const container = document.getElementById("attributes-container");
+    container.innerHTML = "";
+
+    for (const group in ATTRIBUTE_GROUPS) {
+        const groupDiv = document.createElement("div");
+        groupDiv.className = "attribute-group";
+        groupDiv.innerHTML = `<h3>${group}</h3>`;
+
+        ATTRIBUTE_GROUPS[group].forEach(att => {
+            const row = document.createElement("div");
+            row.className = "attribute-row";
+
+            row.innerHTML = `
+                <label>${att}</label>
+                <input type="number" min="25" max="99" value="${current[att]}" class="attribute-input" data-att="${att}">
+            `;
+
+            groupDiv.appendChild(row);
+        });
+
+        container.appendChild(groupDiv);
+    }
+}
+
+/* ----------------------------------------------------------
+   SAVE ATTRIBUTES
+---------------------------------------------------------- */
+document.getElementById("save-attributes-btn").onclick = () => {
+    if (activeCareerIndex === null) return alert("No career selected.");
+
+    const careers = loadCareers();
+    const career = careers[activeCareerIndex];
+
+    const inputs = document.querySelectorAll(".attribute-input");
+    inputs.forEach(inp => {
+        const att = inp.dataset.att;
+        career.attributes[att] = Number(inp.value);
+    });
+
+    saveCareers(careers);
+    alert("Attributes saved!");
 };
 
-/* ---------- Boot ---------- */
-function boot(){
-  // load or create sample if empty
-  if(!CAREERS.length){
-    CAREERS.push(createEmptyCareer('MyCareer'));
-    saveAllCareers(CAREERS);
-  }
-  CURRENT = CAREERS[0];
-  renderAll();
-  // wire simple form field updates
-  qs('#career-list').addEventListener('change', (e)=>{
-    const id = e.target.value;
-    const c = CAREERS.find(cc=>cc.id===id);
-    if(c){ CURRENT = c; renderAll(); }
-  });
-  // populate career select (also clickable buttons exist)
-  const select = qs('#career-list');
-  select.innerHTML = CAREERS.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+/* ----------------------------------------------------------
+   RENDER BADGES
+---------------------------------------------------------- */
+function renderBadges(current = {}) {
+    const list = document.getElementById("badge-list");
+    list.innerHTML = "";
+
+    for (const category in BADGES) {
+        BADGES[category].forEach(badge => {
+            const card = document.createElement("div");
+            card.className = "badge-card";
+
+            const level = current[badge] || "None";
+
+            card.innerHTML = `
+                <h4>${badge}</h4>
+                <div class="badge-levels">
+                    ${["None", "Bronze", "Silver", "Gold", "Hall of Fame", "Legend"].map(lvl => `
+                        <div class="badge-level ${lvl === level ? 'active' : ''}"
+                             data-badge="${badge}" data-level="${lvl}">
+                             ${lvl}
+                        </div>
+                    `).join("")}
+                </div>
+            `;
+
+            list.appendChild(card);
+        });
+    }
+
+    // Badge selecting
+    document.querySelectorAll(".badge-level").forEach(el => {
+        el.onclick = () => {
+            const badge = el.dataset.badge;
+            const level = el.dataset.level;
+
+            const careers = loadCareers();
+            const career = careers[activeCareerIndex];
+
+            career.badges[badge] = level;
+            saveCareers(careers);
+
+            renderBadges(career.badges);
+        };
+    });
 }
-boot();
+
+/* ----------------------------------------------------------
+   GAME ENTRY → POINTS CALCULATION
+---------------------------------------------------------- */
+document.getElementById("calculate-points-btn").onclick = () => {
+    const pts = num("pts"), reb = num("reb"), ast = num("ast");
+    const stl = num("stl"), blk = num("blk"), tov = num("tov");
+    const win = document.getElementById("win").value === "yes";
+    const blown = document.getElementById("blown-lead").value === "yes";
+    const pm = num("plus-minus");
+
+    let points = 0;
+
+    points += pts * 1.5;
+    points += reb * 1.0;
+    points += ast * 1.2;
+    points += stl * 2.0;
+    points += blk * 2.0;
+    points -= tov * 1.0;
+
+    if (win) points += 5;
+    if (blown) points -= 10;
+    if (pm < 0) points += pm; // negative reduces
+
+    // Difficulty
+    const diff = document.querySelector("input[name='difficulty']:checked");
+    if (diff) points *= DIFFICULTY[diff.value];
+
+    if (points < 0) points = 0;
+
+    document.getElementById("points-result").innerHTML =
+        `<h3>Total Points: ${Math.floor(points)}</h3>`;
+};
+
+/* Helper */
+function num(id) {
+    return Number(document.getElementById(id).value) || 0;
+}
+
+/* ----------------------------------------------------------
+   APPLY GAME (SAVE POINTS)
+---------------------------------------------------------- */
+document.getElementById("game-form").onsubmit = e => {
+    e.preventDefault();
+    if (activeCareerIndex === null) return alert("No career selected.");
+
+    const resultText = document.getElementById("points-result").innerHTML;
+    const match = resultText.match(/\d+/);
+    if (!match) return alert("Calculate points first.");
+
+    const gained = Number(match[0]);
+
+    const careers = loadCareers();
+    const career = careers[activeCareerIndex];
+
+    career.points += gained;
+    saveCareers(careers);
+
+    renderCareerList();
+    selectCareer(activeCareerIndex);
+
+    alert(`Saved! +${gained} points added.`);
+};
+
+/* ----------------------------------------------------------
+   INIT
+---------------------------------------------------------- */
+window.onload = () => {
+    renderCareerList();
+};
