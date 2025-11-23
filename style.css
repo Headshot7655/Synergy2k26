@@ -1,0 +1,227 @@
+/* -----------------------------------------------------------
+   Synergy2K Next-Gen • Style.css
+----------------------------------------------------------- */
+body {
+    background: #0d0d0d;
+    color: #fff;
+    margin: 0;
+    font-family: "Inter", Arial, sans-serif;
+}
+
+h1, h2, h3 {
+    font-weight: 700;
+    margin-bottom: 10px;
+}
+
+/* HEADER */
+#header {
+    text-align: center;
+    padding: 20px;
+    background: #111;
+    border-bottom: 2px solid #1f1f1f;
+}
+
+#header h1 {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+nav {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.nav-btn {
+    padding: 8px 12px;
+    background: #1e1e1e;
+    border: 1px solid #333;
+    color: #fff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.nav-btn:hover {
+    background: #0077ff;
+}
+
+/* MAIN */
+#main {
+    width: 95%;
+    max-width: 1200px;
+    margin: 20px auto;
+}
+
+/* PANELS */
+.panel {
+    background: #161616;
+    padding: 20px;
+    border: 1px solid #242424;
+    border-radius: 10px;
+    margin-bottom: 25px;
+}
+
+.panel-inner {
+    margin-top: 10px;
+}
+
+/* GRID */
+.grid-3 {
+    display: grid;
+    grid-template-columns: repeat(3,1fr);
+    gap: 10px;
+}
+
+@media(max-width:700px){
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* BUTTONS */
+.btn {
+    padding: 10px 15px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 15px;
+    transition: 0.2s;
+    color: #fff;
+}
+
+.btn.primary { background:#0077ff; }
+.btn.green   { background:#00b94d; }
+.btn.danger  { background:#cc2828; }
+
+.btn.primary:hover { background:#0065d6; }
+.btn.green:hover   { background:#009c41; }
+.btn.danger:hover  { background:#a01c1c; }
+
+.row { display:flex; gap:10px; margin-top:15px; flex-wrap:wrap; }
+
+/* INPUTS */
+input, select {
+    background: #1f1f1f;
+    border: 1px solid #333;
+    color:#fff;
+    border-radius:6px;
+    padding:8px;
+    width:100%;
+}
+
+/* ATTRIBUTE PANEL */
+.attribute-group {
+    background:#1c1c1c;
+    border:1px solid #2a2a2a;
+    padding:12px;
+    border-radius:10px;
+    margin-bottom:15px;
+}
+
+.attribute-row {
+    display:flex;
+    justify-content:space-between;
+    margin-bottom:10px;
+}
+
+.attribute-input {
+    width:60px;
+    background:#0e0e0e;
+    text-align:center;
+    border-radius:6px;
+}
+
+/* BADGES */
+#badge-filters { display:flex; gap:8px; flex-wrap:wrap; }
+
+.filter-btn {
+    background:#1f1f1f;
+    padding:6px 12px;
+    border:1px solid #333;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.filter-btn.active, .filter-btn:hover {
+    background:#0077ff;
+}
+
+#badge-container {
+    margin-top:15px;
+    display:grid;
+    grid-template-columns: repeat(auto-fill,minmax(135px,1fr));
+    gap:12px;
+}
+
+.badge-card {
+    background:#1d1d1d;
+    border:1px solid #2c2c2c;
+    padding:10px;
+    text-align:center;
+    border-radius:10px;
+}
+
+.badge-level {
+    background:#333;
+    padding:4px 6px;
+    border-radius:4px;
+    margin:2px;
+    cursor:pointer;
+    display:inline-block;
+}
+
+.badge-level.active {
+    background:#00b94d;
+}
+
+.badge-level.legend {
+    background:#bb00ff;
+}
+
+/* SWITCH */
+.switch { position:relative; display:inline-block; width:48px; height:24px; }
+.switch input { display:none; }
+
+.slider {
+    position:absolute; top:0; left:0; right:0; bottom:0;
+    background:#555; border-radius:24px; transition:.3s;
+}
+
+.slider:before {
+    content:""; position:absolute; width:18px; height:18px;
+    left:3px; bottom:3px;
+    background:white; border-radius:50%; transition:.3s;
+}
+
+input:checked + .slider { background:#00b94d; }
+input:checked + .slider:before { transform:translateX(24px); }
+
+/* ARCHETYPES */
+#archetype-container {
+    display:grid;
+    grid-template-columns: repeat(auto-fill,minmax(180px,1fr));
+    gap:12px;
+}
+
+.archetype-card {
+    background:#202020;
+    border:1px solid #333;
+    padding:12px;
+    border-radius:10px;
+    cursor:pointer;
+    transition:.2s;
+}
+.archetype-card:hover { background:#0077ff; }
+
+/* EXPORT */
+#export-output {
+    margin-top:15px;
+    background:#151515;
+    padding:10px;
+    border-radius:8px;
+}
+
+/* Smooth Scroll */
+html { scroll-behavior: smooth; }
